@@ -1,4 +1,93 @@
-# Chainlink NodeJS External Adapter Template
+# Running a Node
+
+Chainlink video tutorial walkthrough of the below: https://www.youtube.com/watch?v=Ba1satx_fw0&ab_channel=Chainlink
+
+Note: this repo was built using the Chainlink NodeJS External Adapter Template.
+
+Docker Running: https://www.docker.com
+
+Free Alchemy Account: https://www.alchemy.com/
+
+Postgres: https://postgresapp.com/
+
+Testnet ETH in MetaMask: https://faucets.chain.link/
+
+Testnet LINK in wallet (Kovan): https://faucets.chain.link/
+
+
+# Step by step setup
+
+Create a local directory to hold the Chainlink data. Paste the below into your terminal and hit enter:
+```
+mkdir ~/.chainlink-kovan
+```
+
+# Create an Environment File
+
+Paste the below into your terminal and hit enter: 
+```
+echo "ROOT=/chainlink
+LOG_LEVEL=debug
+ETH_CHAIN_ID=42
+MIN_OUTGOING_CONFIRMATIONS=2
+LINK_CONTRACT_ADDRESS=0xa36085F69e2889c224210F603D836748e7dC0088
+CHAINLINK_TLS_PORT=0
+SECURE_COOKIES=false
+GAS_UPDATER_ENABLED=true
+ALLOW_ORIGINS=*" > ~/.chainlink-kovan/.env
+```
+
+# Ethereum Client as an External Provider
+Go to Alchemy: https://www.alchemy.com/ and create a staging App on the Kovan network. 
+View details > view key > copy Websockets address. Paste the below into your terminal, replace *CHANGEME* with your Websockets address and hit enter: 
+```
+echo "ETH_URL=CHANGEME" >> ~/.chainlink-kovan/.env
+```
+# Set the Remote DATABASE_URL Config
+
+Download and start Postgres: https://postgresapp.com/
+
+Paste the below into your terminal, replace *$USERNAME* and *$DATABASE* with the Postgres database that has your username (ie, not the one called Postgres or template1, but your username) and hit enter: 
+```
+echo "DATABASE_URL=postgresql://$USERNAME:@host.docker.internal:5432/$DATABASE?sslmode=disable" >> ~/.chainlink-kovan/.env
+```
+
+# Start the Chainlink Node
+
+Paste the below into your terminal and hit enter:
+```
+cd ~/.chainlink-kovan && docker run -p 6688:6688 -v ~/.chainlink-kovan:/chainlink -it --env-file=.env smartcontract/chainlink:1.0.0 local n
+```
+
+The first time running the image, it will ask you for a password and confirmation. Your password must contain numbers and letters and be more than 12 characters long. This will be your wallet password that you can use to unlock the keystore file generated for you. Then, you'll be prompted to enter an API Email and Password. This will be used to expose the API for the GUI interface, and will be used every time you log into your node. 
+
+You can now connect to your Chainlink node's UI interface by navigating to http://localhost:6688
+
+Fund the Ethereum address that your Chainlink node uses. You can find the address in the node Operator GUI under the Keys tab. The address of the node is the Regular type. You can obtain test ETH from several faucets.
+
+
+# Deploy your own Oracle contract
+
+## Overall
+I'm able to successfully deploy the Oracle contract to the Kovan testnet using the Remix IDE and run a job with my node per the [Chainlink video walkthrough](https://www.youtube.com/watch?v=Ba1satx_fw0&ab_channel=Chainlink), or here for [text version](https://docs.chain.link/docs/fulfilling-requests/). However, as our ultimate objective is to enable our bnbBridge contract to communicate with our node, we can't use Remix IDE to compile and deploy our contract, but instead use our own frontend. This is where I'm currently stuck. 
+
+## Where I'm currently at
+I've added the Oracle contract (```Oracle.sol```) into this repo, together with a deploy script in the migrations directory (```3_deploy_contracts```). In your terminal in the root folder of this project, type ```truffle compile``` and hit enter. Then type ```truffle migrate``` and hit enter. The Oracle contract should compile and deploy successfully. (Note: I added the Kovan LINK token address ```"0xa36085F69e2889c224210F603D836748e7dC0088"``` to the ```3_deploy_contracts``` file in the migrations directory as it's required by the contract's constructor).
+
+
+Next, I copied the ```Oracle.json``` ABI file from the build directory and added it to the ```bnbbridge-frontend``` repository (I pushed this to you in a separate git branch). The ```bnbbridge-frontend``` repo is a clone from a _buildspace React frontend project that successfully opens MetaMask and mints an NFT in the browser. You can see this by running `npm install` at the root of the ```bnbbridge-frontend``` directory and then `npm run start` to start the project. 
+
+In the App.js, I then try to replace the variables (eg ```myEpicNFT``` with ```SetFulfillmentPermission```) and the ABI (eg ```MyEpicNFT.json``` with ```Oracle.json```) per the Chainlink video walkthrough above. In particular, I'm unable to replace this line of code with the ```SetFulFillmentPermission``` event: 
+
+  
+        connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
+          console.log(from, tokenId.toNumber())
+ 
+        
+  Basically, I'm unable to connect the Oracle contract with the React frontend in order to communicate with our node. 
+
+
+ <!-- # Chainlink NodeJS External Adapter Template
 
 This template provides a basic framework for developing Chainlink external adapters in NodeJS. Comments are included to assist with development and testing of the external adapter. Once the API-specific values (like query parameters and API key authentication) have been added to the adapter, it is very easy to add some tests to verify that the data will be correctly formatted when returned to the Chainlink node. There is no need to use any additional frameworks or to run a Chainlink node in order to test the adapter.
 
@@ -6,13 +95,15 @@ This template provides a basic framework for developing Chainlink external adapt
 
 Clone this repo and change "ExternalAdapterProject" below to the name of your project
 
-```bash
+```
+bash
 git clone https://github.com/thodges-gh/CL-EA-NodeJS-Template.git ExternalAdapterProject
 ```
 
 Enter into the newly-created directory
 
-```bash
+```
+bash
 cd ExternalAdapterProject
 ```
 
@@ -154,4 +245,5 @@ If using a REST API Gateway, you will need to disable the Lambda proxy integrati
 - Function to execute: gcpservice
 - Click More, Add variable (repeat for all environment variables)
   - NAME: API_KEY
-  - VALUE: Your_API_key
+  - VALUE: Your_API_key 
+   -->

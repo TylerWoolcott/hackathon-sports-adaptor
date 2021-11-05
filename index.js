@@ -1,5 +1,5 @@
 const { Requester, Validator } = require('@chainlink/external-adapter')
-
+require('dotenv').config()
 // Define custom error scenarios for the API.
 // Return true for the adapter to retry.
 const customError = (data) => {
@@ -12,8 +12,7 @@ const customError = (data) => {
 // with a Boolean value indicating whether or not they
 // should be required.
 const customParams = {
-  base: ['base', 'from', 'coin'],
-  quote: ['quote', 'to', 'market'],
+  playerId: ['playerId'],
   endpoint: false
 }
 
@@ -21,20 +20,20 @@ const createRequest = (input, callback) => {
   // The Validator helps you validate the Chainlink request data
   const validator = new Validator(callback, input, customParams)
   const jobRunID = validator.validated.id
-  const endpoint = validator.validated.data.endpoint || 'price'
-  const url = `https://min-api.cryptocompare.com/data/${endpoint}`
-  const fsym = validator.validated.data.base.toUpperCase()
-  const tsyms = validator.validated.data.quote.toUpperCase()
+
+  const apiKey = process.env.API_KEY
+  const pId = validator.validated.data.playerId
+
+  const url = `https://api.sportsdata.io/v3/soccer/stats/json/PlayerSeasonStatsByPlayer/1/${pId}?key=${apiKey}`
 
   const params = {
-    fsym,
-    tsyms
+    pId
   }
 
   // This is where you would add method and headers
   // you can add method like GET or POST and add it to the config
   // The default is GET requests
-  // method = 'get' 
+  // method = 'get'
   // headers = 'headers.....'
   const config = {
     url,
@@ -48,7 +47,8 @@ const createRequest = (input, callback) => {
       // It's common practice to store the desired value at the top-level
       // result key. This allows different adapters to be compatible with
       // one another.
-      response.data.result = Requester.validateResultNumber(response.data, [tsyms])
+      // response.data.result = Requester.validateResultNumber(response.data, [tsyms])
+
       callback(response.status, Requester.success(jobRunID, response))
     })
     .catch(error => {
